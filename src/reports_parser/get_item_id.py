@@ -1,52 +1,48 @@
 """
-This code pulls item_id frm each json file provided by plaid containing bank data for our customers.
+This code pulls item_id from each json file provided by plaid containing bank data for our customers.
 the path to item_id is: items[0] >> item_id.
 Record this in a dictionary to avoid duplicates and then return as a csv.
 dictionary structure: {acap_key_1 : item_id_1, acap_key_2 : item_id_2, ...}
 """
 
-from typing import Dict, List
+import pandas as pd
+from typing import List
 import json
 from .get_directory_path import get_directory_path
+from .fetch_reports import get_reports
 
 
-def get_item_id(reports: List[str]) -> Dict:
+def get_itemid(row: pd.DataFrame) -> List:
     """
-    Retruns a dictionary with the structure {acap_key_1 : item_id_1, acap_key_2 : item_id_2, ...}
+    A Lambda that would consume a dataframe row and return item_id for that row.
 
     Args:
-        reports: List of the bank transaction report names present in the directory.
-        type: List[str]
+        row (pd.DataFrame): A row of the pandas DataFrame
     Returns:
-        Dict: Dictionary mapping acap_key to the item_id
+        List: A list of all item_ids associated with that row.
     """
-    # Initialize the dictionary where the resulting map will be stored.
-    acapKeyItemIdMap = {}
-    # Parse through the reports and extract acap_key and item_id(s) for each.
-    for report in reports:
-        # Build the filepath for the current report
-        current_report_path = str(get_directory_path() / report)
-        try:
-            # Try accessing the report.
-            with open(current_report_path, "r") as json_file:
-                this_report = json.load(json_file)
-        except Exception:
-            print("Failed to open file.")
+    report = json.loads(row["report_data"])
 
-        try:
-            # Extract the acap_key.
-            acap_key = this_report[
-                "client_report_id"
-            ]  # This is my guess for the location of acap_id on the report.
-        except Exception:
-            print("Failed to extract Acap_key")
-        item_id = []
-        try:
-            # Extract the item_id(s)
-            for item in this_report["items"]:
-                item_id.append(item["item_id"])
-        except:
-            print("Failed to find item_id")
-        acapKeyItemIdMap[acap_key] = item_id
+    return [item["item_id"] for item in report["items"]]
 
-    return acapKeyItemIdMap
+
+def extract_itemid():
+    """
+    1. Pull the reports from snowflake for the period Jan 2025 - Sep 2025.
+    2. Parse the json report and extract the item_id(s) corresponding to each report.
+    3. Store the [acap_id, item_id(s)] pair as a csv.
+
+    Args:
+        None.
+    Returns:
+        None
+    """
+    # Get the reports
+    reports_df = get_reports()
+    # Extract the item_id
+    reports_df["item_id"] = reports_df.apply(get_itemid, axis=1)
+    # Create a subset of the dataframe with just [acap_id, item_id(s)] pair.
+    output_df = reports_df[["acap_refr_id", "item_id"]]
+
+    # Save the [acap_id, item_id(s)] pair as a csv.
+    output_df.to_csv("acapid_itemid_map_plaid.csv", index=False)
