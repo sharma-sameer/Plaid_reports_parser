@@ -4,3 +4,4 @@ Pipfile.lock
 src/reports_parser/__pycache__/
 .env
 *.csv
+*.json
