@@ -10,6 +10,17 @@ from typing import List
 import json
 from .get_directory_path import get_directory_path
 from .fetch_reports import get_reports
+from pathlib import Path
+import logging
+
+# Configure the root logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
+# Use in your module
+logger = logging.getLogger(__name__)
 
 
 def get_itemid(row: pd.DataFrame) -> List:
@@ -38,11 +49,16 @@ def extract_itemid():
         None
     """
     # Get the reports
+    logger.info(
+        "Run the query to fetch the dataframe with [acap_id, item_id(s)] pairs."
+    )
     reports_df = get_reports()
     # Extract the item_id
-    reports_df["item_id"] = reports_df.apply(get_itemid, axis=1)
-    # Create a subset of the dataframe with just [acap_id, item_id(s)] pair.
-    output_df = reports_df[["acap_refr_id", "item_id"]]
+    # reports_df["item_id"] = reports_df.apply(get_itemid, axis=1)
+    logger.info(f"Successfully fetched {len(reports_df)} pairs.")
 
     # Save the [acap_id, item_id(s)] pair as a csv.
-    output_df.to_csv("acapid_itemid_map_plaid.csv", index=False)
+    logger.info("Saving the [acap_id, item_id(s)] pair as a csv.")
+    output_path = Path(Path.cwd(), "output", "acapid_itemid_map_plaid.csv")
+    reports_df.to_csv(output_path, index=False)
+    logger.info(f"Saved the data at path {output_path}.")

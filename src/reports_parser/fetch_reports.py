@@ -8,12 +8,23 @@ import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
 import json
-from typing import Connection
+
+# from typing import Connection
+import logging
+
+# Configure the root logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
+# Use in your module
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
 
-def get_connector() -> Connection:
+def get_connector():
     """
     Function to establish connection with snowflake and return the connection object.
 
@@ -23,6 +34,7 @@ def get_connector() -> Connection:
         ctx (Connection): A connection object to the snowflake datanase.
     """
     # . Establish connection with the snowflake database.
+    logger.info("Establishing connection with the snowflake database.")
     ctx = snowflake.connector.connect(
         user=os.getenv("SNOWFLAKE_USER"),
         password=os.getenv("SNOWFLAKE_PASSWORD"),
@@ -34,8 +46,12 @@ def get_connector() -> Connection:
         # try set authenticator = 'externalbrowser', lead you to Okta SSO webpage
         # authenticator="https://springleaf.okta.com",
         authenticator="externalbrowser",
+        token_cache_path=None,
     )
     # Return the connection object.
+    logger.info(
+        "Established connection to snowflake. Returning the connection object."
+    )
     return ctx
 
 
@@ -52,11 +68,18 @@ def get_reports() -> pd.DataFrame:
     # Establish connection to snowflake.
     ctx = get_connector()
     # Get the cursor
+    logger.info("Create a new cursor.")
     cursor = ctx.cursor()
     # Open the sql file to the executed.
-    with open(Path.cwd() / "sql" / "fetch_reports.sql", "r") as query:
-        # Run the query and save results as a pandas DataFrame.
-        reports_df = cursor.execute(query.read()).fetch_pandas_all()
+    logger.info("Trying to execute the query.")
+    try:
+        with open(Path.cwd() / "sql" / "fetch_reports.sql", "r") as query:
+            # Run the query and save results as a pandas DataFrame.
+            reports_df = cursor.execute(query.read()).fetch_pandas_all()
+    except Exception as e:
+        logger.error(
+            f"Failed to execute the query. Got the following error {e.dict()}"
+        )
 
     # Return the resulting DataFrame
     return reports_df
