@@ -9,18 +9,8 @@ import pandas as pd
 from typing import List
 import json
 from .get_directory_path import get_directory_path
-from .fetch_reports import get_reports
+from .fetch_reports import get_reports, logger
 from pathlib import Path
-import logging
-
-# Configure the root logger
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-
-# Use in your module
-logger = logging.getLogger(__name__)
 
 
 def get_itemid(row: pd.DataFrame) -> List:
