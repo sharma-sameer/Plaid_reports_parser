@@ -7,7 +7,6 @@ import os
 import pandas as pd
 from pathlib import Path
 from dotenv import load_dotenv
-import json
 
 # from typing import Connection
 import logging
@@ -78,8 +77,10 @@ def get_reports() -> pd.DataFrame:
             reports_df = cursor.execute(query.read()).fetch_pandas_all()
     except Exception as e:
         logger.error(
-            f"Failed to execute the query. Got the following error {e.dict()}"
+            f"Failed to execute the query. Got the following error:",
+            exc_info=True,
         )
+        return None
 
     # Return the resulting DataFrame
     return reports_df

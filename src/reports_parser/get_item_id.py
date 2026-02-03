@@ -45,7 +45,11 @@ def extract_itemid():
     reports_df = get_reports()
     # Extract the item_id
     # reports_df["item_id"] = reports_df.apply(get_itemid, axis=1)
-    logger.info(f"Successfully fetched {len(reports_df)} pairs.")
+    if reports_df:
+        logger.info(f"Successfully fetched {len(reports_df)} pairs.")
+    else:
+        logger.info("Exiting the process.")
+        return
 
     # Save the [acap_id, item_id(s)] pair as a csv.
     logger.info("Saving the [acap_id, item_id(s)] pair as a csv.")
