@@ -11,6 +11,7 @@ import json
 from .get_directory_path import get_directory_path
 from .fetch_reports import get_reports, logger
 from pathlib import Path
+import numpy as np
 
 
 def get_itemid(row: pd.DataFrame) -> List:
@@ -43,9 +44,12 @@ def extract_itemid():
         "Run the query to fetch the dataframe with [acap_id, item_id(s)] pairs."
     )
     reports_df = get_reports()
+    logger.info("Deduping the records for getting unique pairs.")
+
+    reports_df = reports_df.drop_duplicates()
     # Extract the item_id
     # reports_df["item_id"] = reports_df.apply(get_itemid, axis=1)
-    if reports_df:
+    if reports_df is not None:
         logger.info(f"Successfully fetched {len(reports_df)} pairs.")
     else:
         logger.info("Exiting the process.")
@@ -53,6 +57,17 @@ def extract_itemid():
 
     # Save the [acap_id, item_id(s)] pair as a csv.
     logger.info("Saving the [acap_id, item_id(s)] pair as a csv.")
-    output_path = Path(Path.cwd(), "output", "acapid_itemid_map_plaid.csv")
-    reports_df.to_csv(output_path, index=False)
-    logger.info(f"Saved the data at path {output_path}.")
+    
+    chunk_size = 100000
+    # Calculate the number of splits needed
+    num_splits = len(reports_df) // chunk_size + (1 if len(reports_df) % chunk_size else 0)
+
+    # Split the DataFrame into a list of smaller DataFrames
+    df_list = np.array_split(reports_df, num_splits)
+
+    # Iterate through the list and save each smaller DataFrame to a new file
+    for i, chunk in enumerate(df_list):
+        output_filename = Path.cwd() / "output" / f'output_part_{i+1}.csv'
+        chunk.to_csv(output_filename, index=False)
+        logger.info(f"Saved {output_filename}")
+    logger.info(f"Saved the data at path {Path.cwd() / "output"}.")

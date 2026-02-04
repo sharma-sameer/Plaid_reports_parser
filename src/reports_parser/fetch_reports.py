@@ -2,13 +2,14 @@
 Code to run a snowflake query and return the results as a pandas DataFrame.
 """
 
-import snowflake.connector
-import os
 import pandas as pd
 from pathlib import Path
-from dotenv import load_dotenv
-
-# from typing import Connection
+import os
+import botocore
+import snowflake.connector as snf
+import botocore.session
+from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
+import json
 import logging
 
 # Configure the root logger
@@ -20,7 +21,14 @@ logging.basicConfig(
 # Use in your module
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+os.environ["AWS_DEFAULT_REGION"] = (
+    "us-east-1"  # Set default region for botocore
+)
+client = botocore.session.get_session().create_client("secretsmanager")
+cache_config = SecretCacheConfig()
+cache = SecretCache(config=cache_config, client=client)
+secret = cache.get_secret_string("snowflake/user-login")
+secret_json = json.loads(secret)
 
 
 def get_connector():
@@ -34,24 +42,18 @@ def get_connector():
     """
     # . Establish connection with the snowflake database.
     logger.info("Establishing connection with the snowflake database.")
-    ctx = snowflake.connector.connect(
-        user=os.getenv("SNOWFLAKE_USER"),
-        password=os.getenv("SNOWFLAKE_PASSWORD"),
-        account="onemainfinancial-prod",
-        database="EDS",
-        warehouse="ANALYSIS_01",
-        role="SF_RG_SCH_MODEL_DATA_SERVICES_RO",
-        # if encountered "250006 (08001): The authentication failed for XXX@omf.com"
-        # try set authenticator = 'externalbrowser', lead you to Okta SSO webpage
-        # authenticator="https://springleaf.okta.com",
-        authenticator="externalbrowser",
-        token_cache_path=None,
-    )
+    crdntls = {
+        "user": secret_json["username"],
+        "password": secret_json["password"],
+        "account": "onemainfinancial-prod",
+    }
+    conn = snf.connect(**crdntls)
+
     # Return the connection object.
     logger.info(
         "Established connection to snowflake. Returning the connection object."
     )
-    return ctx
+    return conn
 
 
 def get_reports() -> pd.DataFrame:
