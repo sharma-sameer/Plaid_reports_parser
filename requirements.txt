@@ -1,4 +1,3 @@
--i https://pypi.org/simple
 asn1crypto==1.5.1
 aws-secretsmanager-caching==1.1.3; python_version >= '3.6'
 black==26.1.0; python_version >= '3.10'

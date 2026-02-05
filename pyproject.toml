@@ -1,0 +1,13 @@
+[project]
+name = "reports_parser"
+version = "0.1.0"
+description = "Simple code to extract item_id from plaid reports."
+requires-python = ">=3.8"
+dynamic = ["dependencies", "optional-dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
