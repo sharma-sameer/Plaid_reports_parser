@@ -9,6 +9,7 @@ import botocore
 import snowflake.connector as snf
 import botocore.session
 from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
+from snowflake.connector.connection import SnowflakeConnection
 import json
 import logging
 
@@ -31,7 +32,7 @@ secret = cache.get_secret_string("snowflake/user-login")
 secret_json = json.loads(secret)
 
 
-def get_connector():
+def get_connector() -> SnowflakeConnection:
     """
     Function to establish connection with snowflake and return the connection object.
 
