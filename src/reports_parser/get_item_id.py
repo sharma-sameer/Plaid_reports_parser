@@ -46,7 +46,8 @@ def extract_itemid():
     reports_df = get_reports()
     logger.info("Deduping the records for getting unique pairs.")
 
-    reports_df = reports_df.drop_duplicates()
+    # reports_df = reports_df.drop_duplicates()
+    reports_df = reports_df.unique()
     # Extract the item_id
     # reports_df["item_id"] = reports_df.apply(get_itemid, axis=1)
     if reports_df is not None:
@@ -60,14 +61,14 @@ def extract_itemid():
     
     chunk_size = 100000
     # Calculate the number of splits needed
-    num_splits = len(reports_df) // chunk_size + (1 if len(reports_df) % chunk_size else 0)
+    # num_splits = len(reports_df) // chunk_size + (1 if len(reports_df) % chunk_size else 0)
 
     # Split the DataFrame into a list of smaller DataFrames
-    df_list = np.array_split(reports_df, num_splits)
+    # df_list = np.array_split(reports_df, num_splits)
 
     # Iterate through the list and save each smaller DataFrame to a new file
-    for i, chunk in enumerate(df_list):
+    for i, chunk in enumerate(reports_df.iter_slices(n_rows=chunk_size)):
         output_filename = Path.cwd() / "output" / f'output_part_{i+1}.csv'
-        chunk.to_csv(output_filename, index=False)
+        chunk.write_csv(output_filename)
         logger.info(f"Saved {output_filename}")
     logger.info(f"Saved the data at path {Path.cwd() / "output"}.")

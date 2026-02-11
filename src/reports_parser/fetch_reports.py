@@ -12,6 +12,7 @@ from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
 from snowflake.connector.connection import SnowflakeConnection
 import json
 import logging
+import polars as pl
 
 # Configure the root logger
 logging.basicConfig(
@@ -77,7 +78,9 @@ def get_reports() -> pd.DataFrame:
     try:
         with open(Path.cwd() / "sql" / "fetch_reports.sql", "r") as query:
             # Run the query and save results as a pandas DataFrame.
-            reports_df = cursor.execute(query.read()).fetch_pandas_all()
+            # reports_df = cursor.execute(query.read()).fetch_pandas_all()
+            # Using Polars
+            reports_df = pl.read_database(query.read(), ctx)
     except Exception as e:
         logger.error(
             f"Failed to execute the query. Got the following error:",

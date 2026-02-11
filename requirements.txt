@@ -41,3 +41,4 @@ tomlkit==0.14.0; python_version >= '3.9'
 typing-extensions==4.15.0; python_version >= '3.9'
 tzdata==2025.3; python_version >= '2'
 urllib3==2.6.3; python_version >= '3.9'
+polars
