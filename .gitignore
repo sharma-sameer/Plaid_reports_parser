@@ -6,3 +6,5 @@ src/reports_parser/__pycache__/
 *.csv
 *.json
 *.zip
+src/*.egg*/
+scrap*
