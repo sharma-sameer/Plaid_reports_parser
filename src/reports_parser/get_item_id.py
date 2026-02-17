@@ -99,3 +99,6 @@ def extract_itemid():
     #     chunk.write_csv(output_filename)
     #     logger.info(f"Saved {output_filename}")
     # logger.info(f"Saved the data at path {Path.cwd() / "output"}.")
+    output_filename = Path.cwd() / "output" / f'acap_itemid_pairs.csv'
+    reports_df.write_csv(output_filename)
+    logger.info(f"Saved the data at path {Path.cwd() / "output"}.")
