@@ -6,16 +6,12 @@ with item_ids as(
     from
         EDS.MODEL_DATA_SERVICES.INCOME_VERIFICATION_REQUESTS_PROD as requests
         inner join EDS.MODEL_DATA_SERVICES.INCOME_VERIFICATION_PROVIDER_REPORTS_PROD as reports on requests."workflowId" = reports."workflowId"
-        and "provider" = 'PLAID'),
-apps as (
+        and "provider" = 'PLAID'
+        where requests."createdAt" between TO_TIMESTAMP('2025-01-01') and TO_TIMESTAMP('2025-10-10'))
+,apps as (
     select
         alp.ACAP_REFR_ID,
-        alp.p_tax_id,
-        alp.appl_entry_dt,
         substr(alp.appl_entry_dt, 0, 7) as date_ym,
-        alp.appl_entry_ts,
-        alp.appl_stat,
-        alp.cust_type,
         row_number() over (
             partition by alp.p_tax_id,
             date_ym,
@@ -24,11 +20,11 @@ apps as (
                 alp.appl_entry_ts
         ) as row_n,
         item_ids.item_id
-    from
-        item_ids
-        inner join bdm.app_loan_production as alp on alp.acap_refr_id = item_ids.acap_refr_id
+    from bdm.app_loan_production as alp
+        inner join item_ids
+        on alp.acap_refr_id = item_ids.acap_refr_id
     where
-        appl_entry_dt between '2025-01-01' and '2025-09-30'
+        TO_DATE(appl_entry_dt) between TO_DATE('2025-01-01') and TO_DATE('2025-09-30')
         qualify row_n = 1
 )
 select
