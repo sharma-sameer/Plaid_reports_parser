@@ -61,8 +61,10 @@ def extract_itemid():
     )
     cross_verification_df = cross_verification_df.with_columns(
         pl.col("cross_validation_set").cast(pl.Int64)
-    )
-    reports_df = reports_df.with_columns(pl.col("ACAP_REFR_ID").cast(pl.Int64))
+    ).sort("cross_validation_set")
+    reports_df = reports_df.with_columns(
+        pl.col("ACAP_REFR_ID").cast(pl.Int64)
+    ).sort("ACAP_REFR_ID")
     is_in_reports_df = (
         cross_verification_df["cross_validation_set"]
         .unique()
@@ -91,14 +93,14 @@ def extract_itemid():
     reports_df_all.filter(reports_df_all["is_in_cv_df"] == False).write_csv(
         Path.cwd() / "output" / "Additional_ACAP_KEYS.csv"
     )
-    # chunk_size = 100000
+    chunk_size = 100000
 
-    # # Iterate through the list and save each smaller DataFrame to a new file
-    # for i, chunk in enumerate(reports_df.iter_slices(n_rows=chunk_size)):
-    #     output_filename = Path.cwd() / "output" / f'output_part_{i+1}.csv'
-    #     chunk.write_csv(output_filename)
-    #     logger.info(f"Saved {output_filename}")
-    # logger.info(f"Saved the data at path {Path.cwd() / "output"}.")
-    output_filename = Path.cwd() / "output" / f"acap_itemid_pairs.csv"
-    reports_df.write_csv(output_filename)
+    # Iterate through the list and save each smaller DataFrame to a new file
+    for i, chunk in enumerate(reports_df.iter_slices(n_rows=chunk_size)):
+        output_filename = Path.cwd() / "output" / f"output_part_{i+1}.csv"
+        chunk.write_csv(output_filename)
+        logger.info(f"Saved {output_filename}")
     logger.info(f"Saved the data at path {Path.cwd() / "output"}.")
+    # output_filename = Path.cwd() / "output" / f"acap_itemid_pairs.csv"
+    # reports_df.write_csv(output_filename)
+    # logger.info(f"Saved the data at path {Path.cwd() / "output"}.")
